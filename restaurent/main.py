@@ -246,7 +246,7 @@ nb_proc = 5
 # __________________
 
 # Periode de commande
-periode_commande = 4
+periode_commande = 2
 
 # Ce qu'il y a sur le menu
 menu = [False,"Nouilles","Hot-Dog","Biere","Plateau_charcuterie"]
