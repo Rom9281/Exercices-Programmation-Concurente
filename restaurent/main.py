@@ -187,7 +187,7 @@ def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_s
 
         # Recupere tout les elements de la queue
         while not (queue_attentes.empty()):
-            liste_elements.append(lock_queue.get())
+            liste_elements.append(queue_attentes.get())
         
         # Les imprimes
         ligne = 1
