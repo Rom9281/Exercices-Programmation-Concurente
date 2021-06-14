@@ -143,8 +143,8 @@ def tache_serveur(i,queue_attentes,lock_queue,liste_action_serveur,lock_action_s
         lock_action_serveur.acquire()
 
         # Remplace son ancienne tache par sa nouvelle tache en cours qu'il declare au major d'homme
-        liste_action_serveur[i] = tache[0]
-        liste_action_serveur[i+1] = tache[1]
+        liste_action_serveur[2*i] = tache[0]
+        liste_action_serveur[2*i+1] = tache[1]
 
         lock_action_serveur.release()
 
@@ -166,8 +166,8 @@ def tache_serveur(i,queue_attentes,lock_queue,liste_action_serveur,lock_action_s
         lock_action_serveur.acquire()
 
         # Annonce au major d'homme qu'il ne fait rien
-        liste_action_serveur[i] = 0
-        liste_action_serveur[i+1] = 0
+        liste_action_serveur[2*i] = 0
+        liste_action_serveur[2*i+1] = 0
 
         lock_action_serveur.release()
 
@@ -184,14 +184,21 @@ def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_s
 
         # Ouverture de la queue
         lock_queue.acquire()
+        str_queue=""
 
         # Recupere tout les elements de la queue
         while not (queue_attentes.empty()):
             liste_elements.append(queue_attentes.get())
         
+        # Formatage pour l'impression
+        liste_elements_str = [",".join(x) for x in liste_elements]
+
         # Les imprimes
         ligne = 1
-        ecrire_un_message("Liste des commandes en attentes : "+("|".join(liste_elements)),ligne,0)
+        if liste_elements_str == []:
+            ecrire_un_message("Liste des commandes en attentes : Vide",ligne,0)
+        else:
+            ecrire_un_message("Liste des commandes en attentes : "+("|".join(liste_elements_str)),ligne,0)
 
         # Les remets
         while liste_elements != []:
@@ -246,7 +253,7 @@ nb_proc = 5
 # __________________
 
 # Periode de commande
-periode_commande = 2
+periode_commande = 1
 
 # Ce qu'il y a sur le menu
 menu = [False,"Nouilles","Hot-Dog","Biere","Plateau_charcuterie"]
