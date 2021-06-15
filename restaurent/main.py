@@ -171,7 +171,7 @@ def tache_serveur(i,queue_attentes,lock_queue,liste_action_serveur,lock_action_s
 
         lock_action_serveur.release()
 
-def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_serveur,nb_proc,menu,phrase_servi,lock_phrase_servi):
+def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_serveur,nb_proc,menu,phrase_servi,lock_phrase_servi,flag):
     tache_active = True
 
     # Liste temporaire des elements de la queue
@@ -184,26 +184,28 @@ def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_s
 
         # Ouverture de la queue
         lock_queue.acquire()
-        str_queue=""
 
         # Recupere tout les elements de la queue
         while not (queue_attentes.empty()):
-            liste_elements.append(queue_attentes.get())
+            element_queue = queue_attentes.get()
+            liste_elements.append([str(element_queue[0]),str(element_queue[1])])
         
         # Formatage pour l'impression
         liste_elements_str = [",".join(x) for x in liste_elements]
 
         # Les imprimes
         ligne = 1
-        if liste_elements_str == []:
-            ecrire_un_message("Liste des commandes en attentes : Vide",ligne,0)
-        else:
+        
+        if liste_elements != []:
             ecrire_un_message("Liste des commandes en attentes : "+("|".join(liste_elements_str)),ligne,0)
+            flag = False
+        if flag:
+            ecrire_un_message("Liste des commandes en attentes : Vide",ligne,0)
 
         # Les remets
         while liste_elements != []:
             # Met le premier element de la liste dans le queue
-            queue_attentes.put(liste_elements[0])
+            queue_attentes.put([int(liste_elements[0][0]),int(liste_elements[0][1])])
             # Enleve le premier element
             liste_elements.pop(0)
         
@@ -212,6 +214,7 @@ def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_s
         
         # Affichage des etats des differents process des serveurs
         # _______________________________________________________
+        ligne += 1
 
         # Monopolise l'acces aux etats des serveurs
         lock_action_serveur.acquire()
@@ -221,17 +224,18 @@ def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_s
             num_com = liste_action_serveur[2*k]
             com = liste_action_serveur[2*k+1]
             if (num_com == 0) or (com == 0):
-                ecrire_un_message("Le serveur (%s) est en attente"%(ligne-1),ligne,0)
+                ecrire_un_message("Le serveur (%s) est en attente"%(k+1,),ligne,0)
             else:
-                ecrire_un_message("Le serveur (%s) traite la commande (%s|%s)"%(ligne-1,num_com,menu[com]),ligne,0)
+                ecrire_un_message("Le serveur (%s) traite la commande (%s|%s)"%(k+1,num_com,menu[com]),ligne,0)
 
         # On relache le jeton pour que d'autres accedent à la liste
         lock_action_serveur.release()
 
         # Affiche le plat servi
         lock_phrase_servi.acquire()
-        ligne += 1
-        ecrire_un_message("Le serveur  %s à finit la commande (%s|%s)"%(phrase_servi[0],phrase_servi[1],phrase_servi[2]),ligne,0)
+        ligne += 2
+        num_menu = phrase_servi[2]
+        ecrire_un_message("Le serveur  (%s) à finit la commande (%s|%s)"%(phrase_servi[0],phrase_servi[1],menu[num_menu]),ligne,0)
         lock_phrase_servi.release()
 
 
@@ -241,12 +245,15 @@ def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_s
 effacer_ecran()
 # ________________________________   VARIABLES   ______________________________________
 
+# Majour d'hommme
+# _______________
+flag = True
 
 # Du Processus Serveurs
 # __________________
 
 # Nombre de processus représentant le nombre de serveurs
-nb_proc = 5
+nb_proc = 8
 
 
 # Du Processus Clients
@@ -256,7 +263,7 @@ nb_proc = 5
 periode_commande = 1
 
 # Ce qu'il y a sur le menu
-menu = [False,"Nouilles","Hot-Dog","Biere","Plateau_charcuterie"]
+menu = [False,"Nouilles","Hot-Dog","Biere","Plateau_charcuterie","Vin rouge","Sushi","Pankakes"]
 
 
 # La queue de commande en attentes et son lock
@@ -284,12 +291,12 @@ lock_phrase_servi = mp.Lock()
 phrase_servi = mp.Array('i',3)
 
 # -*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*--*-*-*-*-* PROCESSUS -*-*-*-*-*-*-*-**-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
+curseur_invisible()
 # Processus Serveur
 process_client = mp.Process(target=tache_client,args=(menu,periode_commande,queue_attentes,lock_queue,sem_tache))
 
 # Processus major d'homme
-processus_major_dhomme =  mp.Process(target=tache_major_dhomme,args=(queue_attentes,lock_queue,liste_action_serveur,lock_action_serveur,nb_proc,menu,phrase_servi,lock_phrase_servi))
+processus_major_dhomme =  mp.Process(target=tache_major_dhomme,args=(queue_attentes,lock_queue,liste_action_serveur,lock_action_serveur,nb_proc,menu,phrase_servi,lock_phrase_servi,flag))
 
 # Création des process des serveurs
 liste_process_server = []
@@ -309,5 +316,5 @@ for process in liste_process_server:
     process.join()
 
 
-
+curseur_visible()
 
