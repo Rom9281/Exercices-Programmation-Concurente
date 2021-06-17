@@ -16,10 +16,14 @@ def Calcul_Pi_Multi_Processus(nb_it, variable_partagee, verrou): #création fonc
 
 # ___________________________________   VARIABLES   ___________________________________
 
-nombre_processus = 4   #nombre de processus que l'on utilise
+nb_processus = 4   #nombre de processus que l'on utilise
+
+nb_total_iterations = 10000000 #nombre d'itérations que l'on fait
+debut = time.time() #démarrage du chronomètre
 
 variable_partagee = mp.Value("i", 0) #création d'une variable partagée
 verrou = mp.Semaphore(1)             #création d'un verrou
+
 iteration_par_processus=int(nb_total_iterations /nb_processus) #énoncé : chaque process effectue N/k iterations
 nb_iter = nb_total_iterations-iteration_par_processus*nb_processus  #énoncé  
     
@@ -29,7 +33,7 @@ for p in range(nb_processus): #calcul du nombre d'itérations
         iteration_par_processus+=nb_iter #nombre d'itération que l'on met dans le calcul multi-processus parallèle
     processus.append(mp.Process(target = Calcul_Pi_Multi_Processus, args = (iteration_par_processus,variable_partagee,verrou))) #création d'un processus qui appelle la fonction
 
-debut = time.time() #démarrage du chronomètre
+
 for p in processus:
     p.start() #Démarrage de chaque processus créé
     print( Calcul_Pi_Multi_Processus(iteration_par_processus,variable_partagee,verrou)) #Dans chaque processus, on appelle notre fonction
