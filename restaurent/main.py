@@ -1,5 +1,18 @@
 # Sujet restaurent
 
+# CPE LYON
+
+# 3 ETI
+
+# 2021
+
+# Groupe D
+
+# Projet process
+
+# Capucine CASTELNEAU | Romain GAUD
+
+
 
 # - - - - - /!\   CODE DU PROFESSEUR ISSUS DE CTRL PRESSION TEMPERATURE  /!\  - - - - - - - - 
 

@@ -1,6 +1,18 @@
-# CASTELNEAU - GAUD
-# 3 ETI - GR D - CPE
-# 
+# Sujet centrale de controle pression et température
+
+# CPE LYON
+
+# 3 ETI
+
+# 2021
+
+# Groupe D
+
+# Projet process
+
+# Capucine CASTELNEAU | Romain GAUD
+
+
 
 # - - - - - /!\   CODE DU PROFESSEUR /!\  - - - - - - - - 
 

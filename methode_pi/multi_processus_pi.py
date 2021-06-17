@@ -1,3 +1,19 @@
+# Sujet pi
+
+# CPE LYON
+
+# 3 ETI
+
+# 2021
+
+# Groupe D
+
+# Projet process
+
+# Capucine CASTELNEAU | Romain GAUD
+
+
+
 ##############      Methode parallele Multi_Processus        ##############
 import random, time, math   #importation des bibliothéques nécéssaires
 import multiprocessing as mp
