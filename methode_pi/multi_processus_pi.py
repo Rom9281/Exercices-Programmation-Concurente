@@ -1,6 +1,8 @@
 ##############      Methode parallele Multi_Processus        ##############
+import random, time, math   #importation des bibliothéques nécéssaires
+import multiprocessing as mp
 
-nombre_processus = 4   #nombre de processus que l'on utilise
+# _____________________________________   FONCTIONS   ____________________________________
 
 def Calcul_Pi_Multi_Processus(nb_it, variable_partagee, verrou): #création fonction et ses parametres
     count=0 #initialisation de count
@@ -8,10 +10,14 @@ def Calcul_Pi_Multi_Processus(nb_it, variable_partagee, verrou): #création fonc
         x = random.random() #valeur aléatoire de x comprise entre 0 et 1 (coordonnée)
         y = random.random() #valeur aléatoire de y comprise entre 0 et 1 (coordonnée)
         if x*x + y*y <= 1: #on verifie si le point créé appartient au cercle unite
-            count += 1 #si oui, on incrémente le nombre de count de 1.
-            
+            count += 1 #si oui, on incrémente le nombre de count de 1.  
     with verrou:    
         variable_partagee.value+=count
+
+# ___________________________________   VARIABLES   ___________________________________
+
+nombre_processus = 4   #nombre de processus que l'on utilise
+
 variable_partagee = mp.Value("i", 0) #création d'une variable partagée
 verrou = mp.Semaphore(1)             #création d'un verrou
 iteration_par_processus=int(nb_total_iterations /nb_processus) #énoncé : chaque process effectue N/k iterations
