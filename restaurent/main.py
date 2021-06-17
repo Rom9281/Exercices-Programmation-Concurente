@@ -78,37 +78,22 @@ def ecrire_un_message(message,ligne,colonne) :
 
 # _*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_**_*_   FONCTIONS DE LEQUIPE   _*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
 
-def s_value_to_lol(s_value):
-    """ On transforme un str de la forme a,a;b,b;c,c;d,d en [[a,a],[b,b],..."""
-    ret = []
-
-    # On split une premiere fois
-    liste = s_value.split(";")
-
-    #On split chaque sous element
-    for element in liste:
-        ret.append(element.split(","))
-    
-    return ret
-
-def lol_to_s_value(lol):
-    """ On transforme [[a,a],[b,b],... en un str de la forme a,a;b,b;c,c;d,d"""
-    ret = ""
-    liste = []
-    
-    for element in lol:
-        liste.append(",".join(element))
-    
-    ret = ";".join(liste)
-    
-    return ret 
-
-def tache_client(menu,periode_commande,queue_attentes,lock_queue,sem_tache):
+def tache_client(menu,periode_commande,queue_attentes,lock_queue,sem_tache,rand_com_time):
+    # Activation boucle
     tache_active = True
+    duree_max = periode_commande
+
+    # Numeor de commande à 0
     numero_commande = 0
 
     while tache_active:
         numero_commande += 1
+
+        # Rend aléatoire le temps d'arrivée d'une nouvelle commande
+        if rand_com_time:
+            periode_commande = duree_max*random.random()
+        
+        # Choisit aléatoirement un élément du menu
         commande = random.randint(1,len(menu)-1)
 
         # Ajout du de la commande dans la file
@@ -171,11 +156,8 @@ def tache_serveur(i,queue_attentes,lock_queue,liste_action_serveur,lock_action_s
 
         lock_action_serveur.release()
 
-def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_serveur,nb_proc,menu,phrase_servi,lock_phrase_servi,flag):
+def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_serveur,nb_proc,menu,phrase_servi,lock_phrase_servi):
     tache_active = True
-
-    # Liste temporaire des elements de la queue
-    liste_elements = []
 
     # Boucle active
     while tache_active:
@@ -185,22 +167,26 @@ def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_s
         # Ouverture de la queue
         lock_queue.acquire()
 
+        # Liste temporaire des elements de la queue
+        liste_elements = []
+        liste_elements_affichage = []
+
         # Recupere tout les elements de la queue
         while not (queue_attentes.empty()):
             element_queue = queue_attentes.get()
+            liste_elements_affichage.append([str(element_queue[0]),menu[element_queue[1]]])
             liste_elements.append([str(element_queue[0]),str(element_queue[1])])
         
         # Formatage pour l'impression
-        liste_elements_str = [",".join(x) for x in liste_elements]
+        liste_elements_str = [",".join(x) for x in liste_elements_affichage]
 
         # Les imprimes
         ligne = 1
         
         if liste_elements != []:
-            ecrire_un_message("Liste des commandes en attentes : "+("|".join(liste_elements_str)),ligne,0)
-            flag = False
-        if flag:
-            ecrire_un_message("Liste des commandes en attentes : Vide",ligne,0)
+            ecrire_un_message(" [WAITING LIST] Liste des commandes en attentes : "+("|".join(liste_elements_str)),ligne,0)
+        else:
+            ecrire_un_message(" [WAITING LIST] Liste des commandes en attentes : Vide",ligne,0)
 
         # Les remets
         while liste_elements != []:
@@ -235,68 +221,75 @@ def tache_major_dhomme(queue_attentes,lock_queue,liste_etat_server,lock_action_s
         lock_phrase_servi.acquire()
         ligne += 2
         num_menu = phrase_servi[2]
-        ecrire_un_message("Le serveur  (%s) à finit la commande (%s|%s)"%(phrase_servi[0],phrase_servi[1],menu[num_menu]),ligne,0)
+
+        # Si il n'y a eu aucune commande
+        if (phrase_servi[2] == 0) and (phrase_servi[1] == 0):
+            ecrire_un_message(" [COMPLETED] Aucune commande n'as été réalisé...",ligne,0)
+        else:
+            ecrire_un_message(" [COMPLETED] Le serveur (%s) à finit la commande (%s|%s)"%(phrase_servi[0]+1,phrase_servi[1],menu[num_menu]),ligne,0)
         lock_phrase_servi.release()
 
-
-
         
-#  - - - - - - - - - - - - - - - Effacer l'ecran  - - - - -- - - -- - - -- - - - - - - -
+#  - - - - - - - - - - - - - - -   GESTION ECRAN   - - - - -- - - -- - - -- - - - - - - -
+
+
 effacer_ecran()
+curseur_invisible()
+
+
 # ________________________________   VARIABLES   ______________________________________
-
-# Majour d'hommme
-# _______________
-flag = True
-
-# Du Processus Serveurs
-# __________________
-
-# Nombre de processus représentant le nombre de serveurs
-nb_proc = 8
 
 
 # Du Processus Clients
 # __________________
 
+# Met aléatoirement la periode de commande
+rand_com_time = True
+
 # Periode de commande
-periode_commande = 1
+periode_commande = 3
 
 # Ce qu'il y a sur le menu
-menu = [False,"Nouilles","Hot-Dog","Biere","Plateau_charcuterie","Vin rouge","Sushi","Pankakes"]
+menu = [False,"Nouilles","Entrecote","Une salade de fruit","Un tiramisu","Des moshi","Du mafé","Un expresso","Une tarte a la poire","Un chateau Margaux","Curry","Nems","Coca","Une bouteille de Dom Pérignon","Hot-Dog","Biere","Plateau_charcuterie","Vin rouge","Sushi","Pankakes","Caviar","Tacos Trois Viandes"]
+
+
+# Du Processus Serveurs
+# ______________________
+
+# Nombre de processus représentant le nombre de serveurs
+nb_proc = 6
+
+# Temps de preparation
+periode_prepa = 6
+
+
+# _____________________________   VARIABLES PROCESS   ____________________________
 
 
 # La queue de commande en attentes et son lock
-# ____________________________________________
-
 queue_attentes = mp.Queue()
 lock_queue = mp.Lock()
 
 # Tache des serveurs en cours
-# ___________________________
-
 lock_action_serveur = mp.Lock()
 liste_action_serveur = mp.Array('i',nb_proc*2)
-# actionserveur[case_à tirer]
 
 # Semaphores qui permet au serveur de commencer une tache
 sem_tache = mp.Semaphore(0)
 
-# Plat servi
-# __________
-periode_prepa = 7
-
-# Value du plat servi
+# Phrase servi permet de dire quel plat a été servi en dernier par quelserveurs
 lock_phrase_servi = mp.Lock()
 phrase_servi = mp.Array('i',3)
 
+
 # -*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*--*-*-*-*-* PROCESSUS -*-*-*-*-*-*-*-**-*-*-*-*-*-*-*-*-*-*-*-*-*-
-curseur_invisible()
+
+
 # Processus Serveur
-process_client = mp.Process(target=tache_client,args=(menu,periode_commande,queue_attentes,lock_queue,sem_tache))
+process_client = mp.Process(target=tache_client,args=(menu,periode_commande,queue_attentes,lock_queue,sem_tache,rand_com_time))
 
 # Processus major d'homme
-processus_major_dhomme =  mp.Process(target=tache_major_dhomme,args=(queue_attentes,lock_queue,liste_action_serveur,lock_action_serveur,nb_proc,menu,phrase_servi,lock_phrase_servi,flag))
+processus_major_dhomme =  mp.Process(target=tache_major_dhomme,args=(queue_attentes,lock_queue,liste_action_serveur,lock_action_serveur,nb_proc,menu,phrase_servi,lock_phrase_servi))
 
 # Création des process des serveurs
 liste_process_server = []
@@ -314,7 +307,6 @@ processus_major_dhomme.join()
 process_client.join()
 for process in liste_process_server:
     process.join()
-
 
 curseur_visible()
 
